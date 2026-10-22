@@ -120,7 +120,7 @@ A: 답변 내용 (여러 줄 가능)
       <div class="q" id="q"></div>
       <div class="kws" id="kws"></div>
       <div class="gw" id="gw"><div class="ghost hide" id="ghost"></div><textarea id="ans" rows="8" placeholder="답변을 처음부터 직접 입력하세요" spellcheck="false"></textarea></div>
-      <div class="cnt"><span id="saved"></span><span id="len">0</span>자</div>
+      <div class="row" style="margin-top:6px"><button id="mic" class="chip">🎤 말하기</button><span class="tag" id="micmsg"></span><span class="sp"></span><span class="cnt"><span id="saved"></span><span id="len">0</span>자</span></div>
       <div class="hint hide" id="hint"></div>
       <div class="row" style="margin-top:10px">
         <button id="prev">이전</button>
@@ -194,7 +194,7 @@ function start(list){
   const bk=window.__best;items=bk?list:introFirst(list);idx=0;best=bk||{};window.__best=null;save();showPreview();return true;
 }
 
-function showPreview(){stopTimer();
+function showPreview(){if(window.__micStop)window.__micStop();stopTimer();
   $("loader").classList.add("hide");$("app").classList.add("hide");$("preview").classList.remove("hide");
   $("pvTitle").textContent="질문 "+items.length+"개 · 시작 전에 확인하세요";
   const box=$("pvList");box.innerHTML="";
@@ -286,7 +286,7 @@ function renderGhost(){
 }
 function applyMode(){
   const it=items[idx],pr=mode==="practice";
-  stopTimer();tAcc=0;revealKw=false;
+  if(window.__micStop)window.__micStop();stopTimer();tAcc=0;revealKw=false;
   document.querySelectorAll("#seg button").forEach(b=>b.classList.toggle("on",b.dataset.m===mode));
   $("gw").classList.toggle("ovl",pr);$("ghost").classList.toggle("hide",!pr);$("peek").classList.toggle("hide",pr);
   renderKws(it,it.m&&mode!=="real"?it.m:null);
@@ -420,7 +420,7 @@ function markup(s,set,cls){let h="",open=false;for(let i=0;i<s.length;i++){const
 function grade(){
   const it=items[idx],typed=$("ans").value;
   if(!typed.trim())return;
-  stopTimer();if(tAcc>0){const sc=Math.round(tAcc);it.tm=sc;if(it.bt==null||sc<it.bt)it.bt=sc}
+  if(window.__micStop)window.__micStop();stopTimer();if(tAcc>0){const sc=Math.round(tAcc);it.tm=sc;if(it.bt==null||sc<it.bt)it.bt=sc}
   tick();$("tmres").textContent=it.tm!=null?"걸린 시간 "+fmt(it.tm)+(it.bt!=null?" · 최단 "+fmt(it.bt):""):"";
   const {pct,miss,extra}=compare(it.a,typed);
   const html=markup(it.a,miss,""),mine=markup(typed,extra,"ex");
@@ -472,6 +472,23 @@ $("undo").onclick=()=>{
 $("pvAdd").onclick=()=>editItem(-1);
 document.querySelectorAll("#pvSeg button").forEach(b=>b.onclick=()=>{const m=b.dataset.m;if(m==="memo")return;mode=m;idx=0;save();show()});
 document.querySelectorAll("#seg button").forEach(b=>b.onclick=()=>{const m=b.dataset.m;if(m==="memo"){showPreview();return}mode=m;save();renderQ()});
+(function(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition,btn=$("mic"),msg=$("micmsg");
+  if(!SR){btn.classList.add("hide");return}
+  let rec=null,on=false,base="",fin="";
+  const put=t=>{const a=$("ans");a.value=base+t;a.dispatchEvent(new Event("input",{bubbles:true}))};
+  function stop(){on=false;if(rec)try{rec.stop()}catch(e){}btn.textContent="🎤 말하기";msg.textContent=""}
+  btn.onclick=()=>{
+    if(on){stop();return}
+    const a=$("ans");base=a.value&&!/\s$/.test(a.value)?a.value+" ":a.value;fin="";
+    rec=new SR();rec.lang="ko-KR";rec.continuous=true;rec.interimResults=true;
+    rec.onresult=e=>{let it="";for(let i=e.resultIndex;i<e.results.length;i++){const r=e.results[i];if(r.isFinal)fin+=r[0].transcript.trim()+" ";else it+=r[0].transcript}put(fin+it)};
+    rec.onerror=e=>{msg.textContent=(e.error==="not-allowed"||e.error==="service-not-allowed")?"마이크 권한이 막혀 있어요. 주소창에서 마이크를 허용하거나 GitHub 버전에서 써보세요.":"음성 인식 오류: "+e.error;if(e.error!=="no-speech")stop()};
+    rec.onend=()=>{if(on){try{rec.start()}catch(e){stop()}}};
+    try{rec.start();on=true;btn.textContent="⏹ 멈추기";msg.textContent="듣는 중…";a.focus()}catch(e){msg.textContent="시작하지 못했어요."}
+  };
+  window.__micStop=stop;
+})();
 $("ex2").onclick=()=>dl("면접_학습지_"+stamp()+".txt",sheetTxt());
 $("ex4").onclick=()=>dl("면접_학습지_"+stamp()+".html",sheetHTML(true));
 $("ex5").onclick=()=>dl("면접_빈학습지_"+stamp()+".html",sheetHTML(false));
