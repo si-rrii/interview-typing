@@ -289,7 +289,7 @@ function applyMode(){
   if(window.__micStop)window.__micStop();stopTimer();tAcc=0;revealKw=false;
   document.querySelectorAll("#seg button").forEach(b=>b.classList.toggle("on",b.dataset.m===mode));
   $("gw").classList.toggle("ovl",pr);$("ghost").classList.toggle("hide",!pr);$("peek").classList.toggle("hide",pr);
-  renderKws(it,it.m&&mode!=="real"?it.m:null);
+  renderKws(it,null);
   $("timer").textContent="⏱ 0:00"+(it.tm!=null?" · 최근 "+fmt(it.tm):"");
   if(pr)renderGhost();
   $("ans").focus({preventScroll:true});
@@ -383,8 +383,8 @@ function renderQ(){
   const it=items[idx];
   $("pos").textContent=`${idx+1} / ${items.length}`;
   $("q").textContent=it.q;
-  $("ans").value=it.m||"";$("len").textContent=[...(it.m||"")].length;$("saved").textContent=it.m?"저장됨 ✓ · ":"";
-  renderKws(it,it.m?it.m:null);
+  $("ans").value="";$("len").textContent="0";$("saved").textContent=it.m?"이전 답변 저장됨 · ":"";
+  renderKws(it,null);
   renderClickable($("hint"),it,()=>renderKws(items[idx],$("ans").value.trim()?$("ans").value:null));$("hint").classList.add("hide");$("peek").textContent="답변 보기";peeked=false;
   $("result").classList.add("hide");
   const s=best[it.q];$("best").textContent=s==null?"":`최고 ${s}%`;
