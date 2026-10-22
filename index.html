@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>면접 답변 타자연습</title>
+<title>면접 타자연습</title>
 <style>
 :root{--bg:#FBFAF7;--card:#FFFFFF;color-scheme:light;--tx:#3a2e2c;--sub:#8a7568;--line:#e9e5dc;--ac:#A36C6C;--acbg:#f5ece8;--ok:#758C6F;--mid:#C27F5C;--bad:#B0524E;--hint:#a8a398;--missbg:#f6dcd3;--onac:#fff;--ex:#8a6a1f;--exbg:#F3E2BE;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 
@@ -41,6 +41,13 @@ textarea:focus{outline:2px solid var(--ac);outline-offset:-1px}
 .col{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px;min-width:0}
 .col h4{margin:0 0 6px;font-size:13px;color:var(--sub);font-weight:600}
 .legend{font-size:12px;color:var(--sub)}
+.seg{display:flex;margin-bottom:10px}.seg button{border-radius:0;padding:6px 14px;font-size:13px}.seg button:first-child{border-radius:9px 0 0 9px}.seg button:last-child{border-radius:0 9px 9px 0}.seg button.on{background:var(--ac);border-color:var(--ac);color:var(--onac)}
+.gw{position:relative}.gw.ovl textarea{position:absolute;inset:0;width:100%;height:100%;opacity:0;resize:none;overflow:hidden;cursor:text}
+.ghost{font:inherit;font-size:15px;line-height:1.7;white-space:pre-wrap;word-break:break-word;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--hint);min-height:200px}
+.gw.ovl:focus-within .ghost{outline:2px solid var(--ac);outline-offset:-1px}
+.ghost .c{color:var(--tx)}.ghost .w{color:var(--bad);background:var(--missbg)}.ghost .x{color:var(--bad);text-decoration:underline}
+.ghost .cur{border-left:2px solid var(--ac);margin-left:-1px;animation:bl 1s steps(1) infinite}@keyframes bl{50%{border-color:transparent}}
+.tk{cursor:pointer;border-radius:3px}.tk:hover{background:var(--acbg)}.tk.sel{background:var(--ac);color:var(--onac)}
 input.tx{width:100%;font:inherit;font-size:15px;color:var(--tx);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
 input.tx:focus{outline:2px solid var(--ac);outline-offset:-1px}
 .kws{display:flex;gap:6px;flex-wrap:wrap;margin:-4px 0 10px}
@@ -94,8 +101,8 @@ A: 답변 내용 (여러 줄 가능)
 
   <div id="preview" class="hide">
     <div class="card">
-      <div class="row"><b id="pvTitle"></b><span class="sp"></span><button id="pvAdd">+ 질문 추가</button><button id="pvLoad">다른 파일</button><button id="pvToggle">모두 펼치기</button><button class="pri" id="pvStart">시작하기</button></div>
-      <div class="row" style="margin-top:12px"><span class="tag">저장 · 내보내기</span><button id="ex1">질문·답변 .txt</button><button id="ex2">내 답변 포함 .txt</button><button id="ex3">백업 .json</button><span class="tag" id="exmsg"></span></div>
+      <div class="row"><b id="pvTitle"></b><span class="sp"></span><button id="pvAdd">+ 질문 추가</button><button id="pvLoad">다른 파일</button><button id="pvToggle">모두 펼치기</button><div class="seg" id="pvSeg"><button class="on" data-m="memo">암기모드</button><button data-m="practice">연습 시작</button><button data-m="real">실전 시작</button></div></div>
+      <div class="row" style="margin-top:12px"><span class="tag">저장 · 내보내기</span><button id="ex1">질문·답변 .txt</button><button id="ex2">학습지 .txt</button><button id="ex4">학습지 .html (PDF용)</button><button id="ex5">빈 학습지 .html</button><button id="ex3">백업 .json</button><span class="tag" id="exmsg"></span></div>
       <div id="pvList"></div>
     </div>
   </div>
@@ -108,10 +115,11 @@ A: 답변 내용 (여러 줄 가능)
     </div>
 
     <div class="card">
-      <div class="row"><span class="tag" id="pos"></span><span class="sp"></span><span class="tag" id="best"></span><button class="chip" id="cedit">수정</button><button class="chip" id="cdel">삭제</button></div>
+      <div class="seg" id="seg"><button data-m="memo">암기</button><button data-m="practice">연습</button><button data-m="real">실전</button></div>
+      <div class="row"><span class="tag" id="pos"></span><span class="tag" id="timer"></span><span class="sp"></span><span class="tag" id="best"></span><button class="chip" id="cedit">수정</button><button class="chip" id="cdel">삭제</button></div>
       <div class="q" id="q"></div>
       <div class="kws" id="kws"></div>
-      <textarea id="ans" rows="8" placeholder="답변을 처음부터 직접 입력하세요" spellcheck="false"></textarea>
+      <div class="gw" id="gw"><div class="ghost hide" id="ghost"></div><textarea id="ans" rows="8" placeholder="답변을 처음부터 직접 입력하세요" spellcheck="false"></textarea></div>
       <div class="cnt"><span id="saved"></span><span id="len">0</span>자</div>
       <div class="hint hide" id="hint"></div>
       <div class="row" style="margin-top:10px">
@@ -127,6 +135,7 @@ A: 답변 내용 (여러 줄 가능)
     <div class="card hide" id="result">
       <div class="row"><div class="score" id="pct"></div><span class="sp"></span><button id="undo" class="hide">이전 원문 복구</button><button id="adopt">내 답변을 원문으로 저장</button></div>
       <div class="tag" id="kwres"></div>
+      <div class="tag" id="tmres"></div>
       <div class="bar"><i id="barfill"></i></div>
       <div class="legend"><b class="r">빨강</b> 원문에 있는데 내가 못 쓴 부분 · <b class="b">황토색</b> 내가 쓴 것 중 원문과 다른 부분</div>
       <div class="cols">
@@ -139,11 +148,11 @@ A: 답변 내용 (여러 줄 가능)
 
 <script>
 const $=id=>document.getElementById(id);
-let items=[],idx=0,best={},peeked=false,dragFrom=0;
+let items=[],idx=0,best={},peeked=false,dragFrom=0,mode="practice",revealKw=false,tStart=null,tAcc=0,tTimer=null;
 const KEY="interview-typing-v1";
 
-function save(){try{localStorage.setItem(KEY,JSON.stringify({items,best}))}catch(e){}}
-function restore(){try{const d=JSON.parse(localStorage.getItem(KEY)||"null");if(d&&d.items&&d.items.length){items=d.items;best=d.best||{};return true}}catch(e){}return false}
+function save(){try{localStorage.setItem(KEY,JSON.stringify({items,best,mode}))}catch(e){}}
+function restore(){try{const d=JSON.parse(localStorage.getItem(KEY)||"null");if(d&&d.items&&d.items.length){items=d.items;best=d.best||{};mode=d.mode||"practice";return true}}catch(e){}return false}
 
 function parseCSV(t){const rows=[];let r=[],c="",q=false;const d=t.indexOf("\t")>-1&&t.indexOf(",")<0?"\t":",";
   for(let i=0;i<t.length;i++){const ch=t[i];
@@ -185,14 +194,14 @@ function start(list){
   const bk=window.__best;items=bk?list:introFirst(list);idx=0;best=bk||{};window.__best=null;save();showPreview();return true;
 }
 
-function showPreview(){
+function showPreview(){stopTimer();
   $("loader").classList.add("hide");$("app").classList.add("hide");$("preview").classList.remove("hide");
   $("pvTitle").textContent="질문 "+items.length+"개 · 시작 전에 확인하세요";
   const box=$("pvList");box.innerHTML="";
   items.forEach((it,i)=>{
     const d=document.createElement("details");d.className="pv";
     const s=document.createElement("summary");s.textContent=(i+1)+". "+it.q+(best[it.q]!=null?"  · 최고 "+best[it.q]+"%":"")+(it.m?"  ✎":"");
-    const p=document.createElement("div");p.className="pa";p.textContent=it.a+(it.k?"\n\n[키워드] "+it.k:"");
+    const p=document.createElement("div");p.className="pa";const pa=document.createElement("div"),kl=document.createElement("div");kl.style.marginTop="8px";const upd=()=>{kl.textContent=it.k?"[키워드] "+it.k:"단어를 눌러 키워드로 지정할 수 있어요."};renderClickable(pa,it,upd);upd();p.append(pa,kl);
     const bar=document.createElement("div");bar.className="row";bar.style.padding="0 12px 12px";
     const eb=document.createElement("button");eb.textContent="수정";eb.onclick=()=>editItem(i);
     const db=document.createElement("button");db.className="dbtn";db.textContent=delArm===i?"확인?":"삭제";db.onclick=e=>delItem(i,e.currentTarget);
@@ -239,6 +248,7 @@ const TPL="# 면접 질문·답변 양식\n# '#'으로 시작하는 줄은 안�
 const kwList=it=>(it.k||"").split(/[,，、\n]/).map(s=>s.trim()).filter(Boolean);
 function renderKws(it,typed){
   const box=$("kws");box.innerHTML="";
+  if(mode==="real"&&!revealKw)return;
   const t=typed==null?null:typed.replace(/\s+/g,"").toLowerCase();
   kwList(it).forEach(k=>{
     const s=document.createElement("span");s.className="kw";
@@ -247,15 +257,78 @@ function renderKws(it,typed){
     box.appendChild(s);
   });
 }
+const fmt=s=>{s=Math.max(0,Math.round(s));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0")};
+function elapsed(){return tStart===null?tAcc:tAcc+(Date.now()-tStart)/1000}
+function tick(){$("timer").textContent="⏱ "+fmt(elapsed())}
+function stopTimer(){if(tTimer){clearInterval(tTimer);tTimer=null}if(tStart!==null){tAcc+=(Date.now()-tStart)/1000;tStart=null}}
+function startTimer(){if(tStart!==null||!$("result").classList.contains("hide"))return;tStart=Date.now();tTimer=setInterval(tick,250)}
+const clean=w=>w.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu,"");
+function renderClickable(box,it,cb){
+  box.innerHTML="";const ks=new Set(kwList(it));
+  it.a.split(/(\s+)/).forEach(tok=>{
+    if(!tok)return;
+    if(/^\s+$/.test(tok)){box.appendChild(document.createTextNode(tok));return}
+    const w=clean(tok),s=document.createElement("span");
+    s.className="tk"+(w&&ks.has(w)?" sel":"");s.textContent=tok;
+    if(w)s.onclick=()=>{const c=kwList(it),i=c.indexOf(w);if(i>=0)c.splice(i,1);else c.push(w);it.k=c.join(", ");save();renderClickable(box,it,cb);if(cb)cb()};
+    box.appendChild(s);
+  });
+}
+function renderGhost(){
+  const it=items[idx],T=[...it.a.replace(/\s*\n\s*/g," ").trim()],Y=[...$("ans").value];let h="";
+  for(let i=0;i<T.length;i++){
+    if(i===Y.length)h+='<span class="cur"></span>';
+    const y=Y[i]==="\n"?" ":Y[i];
+    h+=i<Y.length?'<span class="'+(y===T[i]?"c":"w")+'">'+esc(T[i])+'</span>':esc(T[i]);
+  }
+  if(Y.length>=T.length){h+='<span class="cur"></span>';if(Y.length>T.length)h+='<span class="x">'+esc(Y.slice(T.length).join(""))+'</span>'}
+  $("ghost").innerHTML=h;
+}
+function applyMode(){
+  const it=items[idx],pr=mode==="practice";
+  stopTimer();tAcc=0;revealKw=false;
+  document.querySelectorAll("#seg button").forEach(b=>b.classList.toggle("on",b.dataset.m===mode));
+  $("gw").classList.toggle("ovl",pr);$("ghost").classList.toggle("hide",!pr);$("peek").classList.toggle("hide",pr);
+  renderKws(it,it.m&&mode!=="real"?it.m:null);
+  $("timer").textContent="⏱ 0:00"+(it.tm!=null?" · 최근 "+fmt(it.tm):"");
+  if(pr)renderGhost();
+  $("ans").focus({preventScroll:true});
+}
+function sheetTxt(){
+  const sc=items.map(it=>best[it.q]).filter(x=>x!=null),avg=sc.length?Math.round(sc.reduce((a,b)=>a+b,0)/sc.length):null,ln="=".repeat(36);
+  return "면접 학습지\n"+new Date().toLocaleDateString("ko-KR")+" · 총 "+items.length+"문항"+(avg!=null?" · 평균 일치율 "+avg+"%":"")+"\n\n"+items.map((it,i)=>{const s=best[it.q];return ln+"\n"+(i+1)+". "+it.q+"\n"+ln+"\n"+(it.k?"키워드: "+kwList(it).join(" / ")+"\n":"")+"\n[모범 답안]\n"+it.a+"\n\n[내 답변]\n"+(it.m||"(작성 안 함)")+"\n\n기록: "+(s==null?"채점 전":"최고 일치율 "+s+"%")+(it.bt!=null?" · 최단 "+fmt(it.bt):"")}).join("\n\n")+"\n";
+}
+function hl(it){
+  const ks=kwList(it),s=it.a;let out="",i=0;
+  while(i<s.length){let hit="";for(const k of ks)if(k.length>hit.length&&s.startsWith(k,i))hit=k;
+    if(hit){out+="<b>"+esc(hit)+"</b>";i+=hit.length}else{out+=esc(s[i]);i++}}
+  return out;
+}
+function sheetHTML(full){
+  const sc=items.map(it=>best[it.q]).filter(x=>x!=null),avg=sc.length?Math.round(sc.reduce((a,b)=>a+b,0)/sc.length):null;
+  const css="body{font-family:'Pretendard','Apple SD Gothic Neo','Noto Sans KR','Malgun Gothic',sans-serif;color:#222;max-width:800px;margin:auto;padding:28px;line-height:1.7}h1{font-size:22px;margin:0 0 4px}.sub{color:#777;font-size:13px;margin-bottom:22px}.q{border:1px solid #ddd;border-radius:10px;padding:14px 16px;margin-bottom:14px;break-inside:avoid}.q h2{font-size:16px;margin:0 0 6px}.n{display:inline-block;background:#A36C6C;color:#fff;border-radius:6px;padding:0 8px;margin-right:8px;font-size:13px}.kw span{display:inline-block;background:#f5ece8;color:#A36C6C;border-radius:999px;padding:1px 10px;font-size:12px;margin:2px 6px 4px 0}.lab{font-size:12px;color:#888;margin:8px 0 2px;font-weight:600}.ans,.mine{white-space:pre-wrap;font-size:14px}.ans b{background:#f6e3c8}.line{border-bottom:1px solid #ccc;height:26px}.meta{font-size:12px;color:#888;margin-top:8px}@media print{.pr{display:none}body{padding:0}}";
+  const rows=items.map((it,i)=>{
+    const s=best[it.q],ks=kwList(it);
+    let h='<section class="q"><h2><span class="n">'+(i+1)+'</span>'+esc(it.q)+'</h2>';
+    if(ks.length)h+='<div class="kw">'+ks.map(k=>'<span>'+esc(k)+'</span>').join("")+'</div>';
+    if(full)h+='<div class="lab">모범 답안</div><div class="ans">'+hl(it)+'</div><div class="lab">내 답변</div><div class="mine">'+(it.m?esc(it.m):"(작성 안 함)")+'</div><div class="meta">'+(s==null?"채점 전":"최고 일치율 "+s+"%")+(it.bt!=null?" · 최단 "+fmt(it.bt):"")+'</div>';
+    else h+='<div class="lab">내 답변 쓰기</div>'+'<div class="line"></div>'.repeat(6);
+    return h+'</section>';
+  }).join("");
+  const t=full?"면접 학습지":"면접 연습 학습지";
+  return '<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+t+'</title><style>'+css+'</style></head><body><div class="pr"><button onclick="window.print()">인쇄 / PDF로 저장</button> <span style="color:#888;font-size:12px">인쇄 창에서 대상을 “PDF로 저장”으로 고르세요.</span></div><h1>'+t+'</h1><div class="sub">'+new Date().toLocaleDateString("ko-KR")+' · 총 '+items.length+'문항'+(full&&avg!=null?' · 평균 일치율 '+avg+'%':'')+'</div>'+rows+'</body></html>';
+}
 let st=null;
 function saveSoon(){clearTimeout(st);$("saved").textContent="저장 중… · ";st=setTimeout(()=>{save();$("saved").textContent="저장됨 ✓ · "},400)}
-async function dl(name,text){
+function dl(name,text){
   const m=$("exmsg").offsetParent?$("exmsg"):$("loadmsg");
   try{
-    const d=window.claude&&await window.claude.use("downloads");
-    if(!d){m.textContent="이 화면에서는 파일 저장을 지원하지 않아요.";return}
-    await d.save({filename:name,data:text});m.textContent="저장 완료 ✓";
-  }catch(e){m.textContent=e&&e.code==="declined"?"저장을 취소했어요.":"저장하지 못했어요."}
+    const ext=name.split(".").pop();
+    const b=new Blob([text],{type:ext==="json"?"application/json":ext==="html"?"text/html;charset=utf-8":"text/plain;charset=utf-8"});
+    const u=URL.createObjectURL(b);const a=document.createElement("a");
+    a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(u),1000);m.textContent="저장 완료 ✓";
+  }catch(e){m.textContent="저장하지 못했어요."}
 }
 const stamp=()=>{const d=new Date();return d.getFullYear()+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0")};
 function exQA(){return items.map(it=>"Q: "+it.q+"\nA: "+it.a+(it.k?"\nK: "+it.k:"")).join("\n\n")+"\n"}
@@ -312,11 +385,11 @@ function renderQ(){
   $("q").textContent=it.q;
   $("ans").value=it.m||"";$("len").textContent=[...(it.m||"")].length;$("saved").textContent=it.m?"저장됨 ✓ · ":"";
   renderKws(it,it.m?it.m:null);
-  $("hint").textContent=it.a;$("hint").classList.add("hide");$("peek").textContent="답변 보기";peeked=false;
+  renderClickable($("hint"),it,()=>renderKws(items[idx],$("ans").value.trim()?$("ans").value:null));$("hint").classList.add("hide");$("peek").textContent="답변 보기";peeked=false;
   $("result").classList.add("hide");
   const s=best[it.q];$("best").textContent=s==null?"":`최고 ${s}%`;
   $("prev").disabled=idx===0;$("next").disabled=idx===items.length-1;
-  $("ans").focus({preventScroll:true});
+  applyMode();
 }
 function go(i){idx=i;renderChips();renderQ();renderOrder()}
 
@@ -347,10 +420,12 @@ function markup(s,set,cls){let h="",open=false;for(let i=0;i<s.length;i++){const
 function grade(){
   const it=items[idx],typed=$("ans").value;
   if(!typed.trim())return;
+  stopTimer();if(tAcc>0){const sc=Math.round(tAcc);it.tm=sc;if(it.bt==null||sc<it.bt)it.bt=sc}
+  tick();$("tmres").textContent=it.tm!=null?"걸린 시간 "+fmt(it.tm)+(it.bt!=null?" · 최단 "+fmt(it.bt):""):"";
   const {pct,miss,extra}=compare(it.a,typed);
   const html=markup(it.a,miss,""),mine=markup(typed,extra,"ex");
   $("pct").textContent=pct+"% 일치";
-  renderKws(it,typed);$("adopt").textContent="내 답변을 원문으로 저장";$("undo").classList.toggle("hide",!it.p);
+  revealKw=true;renderKws(it,typed);$("adopt").textContent="내 답변을 원문으로 저장";$("undo").classList.toggle("hide",!it.p);
   {const ks=kwList(it);if(ks.length){const t=typed.replace(/\s+/g,"").toLowerCase();const n=ks.filter(k=>t.includes(k.replace(/\s+/g,"").toLowerCase())).length;$("kwres").textContent="키워드 "+n+" / "+ks.length+" 포함"}else $("kwres").textContent=""}
   $("pct").style.color=pct>=80?"var(--ok)":pct>=50?"var(--mid)":"var(--bad)";
   $("barfill").style.width=pct+"%";
@@ -362,7 +437,13 @@ function grade(){
   $("result").scrollIntoView({behavior:"smooth",block:"nearest"});
 }
 
-$("ans").addEventListener("input",e=>{$("len").textContent=[...e.target.value].length;items[idx].m=e.target.value;renderKws(items[idx],e.target.value.trim()?e.target.value:null);saveSoon()});
+$("ans").addEventListener("input",e=>{
+  const v=e.target.value;$("len").textContent=[...v].length;items[idx].m=v;
+  if(mode!=="real")renderKws(items[idx],v.trim()?v:null);
+  if(mode==="practice")renderGhost();
+  if(v.trim())startTimer();
+  saveSoon();
+});
 $("peek").onclick=()=>{peeked=!peeked;$("hint").classList.toggle("hide",!peeked);$("peek").textContent=peeked?"답변 숨기기":"답변 보기"};
 $("grade").onclick=grade;
 $("ex1").onclick=()=>dl("면접_질문답변_"+stamp()+".txt",exQA());
@@ -375,7 +456,7 @@ $("adopt").onclick=e=>{
   if(!adoptArm){adoptArm=true;e.currentTarget.textContent="정말 바꿀까요? 한 번 더";clearTimeout(adoptT);adoptT=setTimeout(()=>{adoptArm=false;$("adopt").textContent="내 답변을 원문으로 저장"},3000);return}
   clearTimeout(adoptT);adoptArm=false;
   const b=best[it.q];
-  it.p=it.a;it.a=typed;$("hint").textContent=it.a;
+  it.p=it.a;it.a=typed;renderClickable($("hint"),it,()=>renderKws(it,$("ans").value));if(mode==="practice")renderGhost();
   grade();
   if(b==null)delete best[it.q];else best[it.q]=b;
   save();$("best").textContent=b==null?"":"최고 "+b+"%";renderChips();
@@ -383,13 +464,17 @@ $("adopt").onclick=e=>{
 };
 $("undo").onclick=()=>{
   const it=items[idx];if(!it.p)return;
-  const b=best[it.q];it.a=it.p;delete it.p;$("hint").textContent=it.a;
+  const b=best[it.q];it.a=it.p;delete it.p;renderClickable($("hint"),it,()=>renderKws(it,$("ans").value));if(mode==="practice")renderGhost();
   grade();
   if(b==null)delete best[it.q];else best[it.q]=b;
   save();$("best").textContent=b==null?"":"최고 "+b+"%";renderChips();
 };
 $("pvAdd").onclick=()=>editItem(-1);
-$("pvStart").onclick=()=>{idx=0;show()};
+document.querySelectorAll("#pvSeg button").forEach(b=>b.onclick=()=>{const m=b.dataset.m;if(m==="memo")return;mode=m;idx=0;save();show()});
+document.querySelectorAll("#seg button").forEach(b=>b.onclick=()=>{const m=b.dataset.m;if(m==="memo"){showPreview();return}mode=m;save();renderQ()});
+$("ex2").onclick=()=>dl("면접_학습지_"+stamp()+".txt",sheetTxt());
+$("ex4").onclick=()=>dl("면접_학습지_"+stamp()+".html",sheetHTML(true));
+$("ex5").onclick=()=>dl("면접_빈학습지_"+stamp()+".html",sheetHTML(false));
 $("pvLoad").onclick=()=>{$("preview").classList.add("hide");$("loader").classList.remove("hide")};
 $("pvToggle").onclick=()=>{const ds=[...document.querySelectorAll("#pvList details")];const open=ds.some(d=>!d.open);ds.forEach(d=>d.open=open);$("pvToggle").textContent=open?"모두 접기":"모두 펼치기"};
 $("addBtn").onclick=()=>editItem(-1);
@@ -398,7 +483,7 @@ $("ecancel").onclick=()=>$("editPanel").classList.add("hide");
 $("cedit").onclick=()=>editItem(idx);
 $("cdel").onclick=e=>delItem(idx,e.currentTarget);
 $("introBtn").onclick=()=>{const cur=items[idx];items=introFirst(items);idx=items.indexOf(cur);save();renderChips();renderOrder();refreshNav()};
-$("reset").onclick=()=>{items[idx].m="";save();$("saved").textContent="";$("ans").value="";renderKws(items[idx],null);$("len").textContent="0";$("result").classList.add("hide");$("ans").focus()};
+$("reset").onclick=()=>{items[idx].m="";save();$("saved").textContent="";$("ans").value="";stopTimer();tAcc=0;tick();revealKw=false;renderKws(items[idx],null);if(mode==="practice")renderGhost();$("len").textContent="0";$("result").classList.add("hide");$("ans").focus()};
 $("prev").onclick=()=>idx>0&&go(idx-1);
 $("next").onclick=()=>idx<items.length-1&&go(idx+1);
 $("shuf").onclick=()=>{
