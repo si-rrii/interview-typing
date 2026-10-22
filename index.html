@@ -279,9 +279,9 @@ function renderGhost(){
   for(let i=0;i<T.length;i++){
     if(i===Y.length)h+='<span class="cur"></span>';
     const y=Y[i]==="\n"?" ":Y[i];
-    h+=i<Y.length?'<span class="'+(y===T[i]?"c":"w")+'">'+esc(T[i])+'</span>':esc(T[i]);
+    h+=i<Y.length?(y===T[i]?'<span class="c">'+esc(T[i])+'</span>':'<span class="w">'+esc(y)+'</span>'):esc(T[i]);
   }
-  if(Y.length>=T.length){h+='<span class="cur"></span>';if(Y.length>T.length)h+='<span class="x">'+esc(Y.slice(T.length).join(""))+'</span>'}
+  if(Y.length>=T.length){h+='<span class="cur"></span>';if(Y.length>T.length)h+='<span class="w">'+esc(Y.slice(T.length).join(""))+'</span>'}
   $("ghost").innerHTML=h;
 }
 function applyMode(){
