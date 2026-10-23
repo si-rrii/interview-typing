@@ -24,7 +24,7 @@ textarea:focus{outline:2px solid var(--ac);outline-offset:-1px}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .sp{flex:1}
 .hintfmt{font-size:12px;color:var(--sub);white-space:pre-wrap;background:var(--bg);border-radius:8px;padding:10px;margin:10px 0}
-.q{font-size:18px;font-weight:600;margin:6px 0 12px}
+.q{font-size:18px;font-weight:600;margin:6px 0 12px;background:var(--ok);color:#fff;padding:12px 14px;border-radius:10px}
 .tag{font-size:12px;color:var(--sub)}
 .hint{color:var(--hint);background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:12px;margin:10px 0;white-space:pre-wrap;font-size:15px;line-height:1.7}
 .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
@@ -54,8 +54,9 @@ input.tx:focus{outline:2px solid var(--ac);outline-offset:-1px}
 .kw{font-size:12px;padding:2px 9px;border-radius:999px;background:var(--acbg);color:var(--ac)}
 .kw.ok{color:var(--ok)}.kw.no{color:var(--bad)}
 .pv{border:1px solid var(--line);border-radius:10px;margin-top:8px;background:var(--bg)}
-.pv summary{padding:10px 12px;cursor:pointer;font-weight:600;font-size:14px}
-.pv .pa{padding:0 12px 12px;white-space:pre-wrap;font-size:14px;line-height:1.7;color:var(--sub)}
+.pv{overflow:hidden}.pv summary{padding:10px 12px;cursor:pointer;font-weight:600;font-size:14px;background:var(--ok);color:#fff}
+.pv .kwrow{display:none;margin-top:6px;font-weight:400}#pvList.kwonly .kwrow{display:flex;gap:6px;flex-wrap:wrap}.pv summary .kw{background:#fff;color:#5d7358}
+.pv .pa{padding:12px;white-space:pre-wrap;font-size:14px;line-height:1.7;color:var(--tx);background:var(--card)}
 .pv .mine{color:var(--tx);border-top:1px dashed var(--line);margin:0 12px 10px;padding:8px 0 0}
 .ord{display:flex;align-items:center;gap:8px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;margin-top:6px;background:var(--bg);cursor:grab}
 .ord.cur{border-color:var(--ac)}.ord.over{border-color:var(--ac);background:var(--acbg)}
@@ -101,7 +102,7 @@ A: 답변 내용 (여러 줄 가능)
 
   <div id="preview" class="hide">
     <div class="card">
-      <div class="row"><b id="pvTitle"></b><span class="sp"></span><button id="pvAdd">+ 질문 추가</button><button id="pvLoad">다른 파일</button><button id="pvToggle">모두 펼치기</button><div class="seg" id="pvSeg"><button class="on" data-m="memo">암기모드</button><button data-m="practice">연습 시작</button><button data-m="real">실전 시작</button></div></div>
+      <div class="row"><b id="pvTitle"></b><span class="sp"></span><button id="pvAdd">+ 질문 추가</button><button id="pvLoad">다른 파일</button><button id="pvKw">키워드만 보기</button><button id="pvToggle">모두 펼치기</button><div class="seg" id="pvSeg"><button class="on" data-m="memo">암기모드</button><button data-m="practice">연습 시작</button><button data-m="real">실전 시작</button></div></div>
       <div class="row" style="margin-top:12px"><span class="tag">저장 · 내보내기</span><button id="ex1">질문·답변 .txt</button><button id="ex2">학습지 .txt</button><button id="ex4">학습지 .html (PDF용)</button><button id="ex5">빈 학습지 .html</button><button id="ex3">백업 .json</button><span class="tag" id="exmsg"></span></div>
       <div id="pvList"></div>
     </div>
@@ -201,12 +202,15 @@ function showPreview(){if(window.__micStop)window.__micStop();stopTimer();
   items.forEach((it,i)=>{
     const d=document.createElement("details");d.className="pv";
     const s=document.createElement("summary");s.textContent=(i+1)+". "+it.q+(best[it.q]!=null?"  · 최고 "+best[it.q]+"%":"")+(it.m?"  ✎":"");
-    const p=document.createElement("div");p.className="pa";const pa=document.createElement("div"),kl=document.createElement("div");kl.style.marginTop="8px";const upd=()=>{kl.textContent=it.k?"[키워드] "+it.k:"단어를 눌러 키워드로 지정할 수 있어요."};renderClickable(pa,it,upd);upd();p.append(pa,kl);
-    const bar=document.createElement("div");bar.className="row";bar.style.padding="0 12px 12px";
+    const p=document.createElement("div");p.className="pa";const pa=document.createElement("div"),kl=document.createElement("div"),kr=document.createElement("div");kl.style.marginTop="10px";kr.className="kwrow";
+    const chips=box2=>{box2.innerHTML="";kwList(it).forEach(k=>{const c=document.createElement("span");c.className="kw";c.textContent=k;box2.appendChild(c)})};
+    const upd=()=>{kl.innerHTML="";const ks=kwList(it),lb=document.createElement("div");lb.className="tag";lb.textContent=ks.length?"키워드":"단어를 누르거나 드래그해서 키워드를 지정할 수 있어요.";kl.appendChild(lb);if(ks.length){const w=document.createElement("div");w.className="kws";w.style.margin="4px 0 0";chips(w);kl.appendChild(w)}chips(kr)};
+    renderClickable(pa,it,upd);upd();p.append(pa,kl);s.appendChild(kr);
+    const bar=document.createElement("div");bar.className="row";bar.style.padding="0 12px 12px";bar.style.background="var(--card)";
     const eb=document.createElement("button");eb.textContent="수정";eb.onclick=()=>editItem(i);
     const db=document.createElement("button");db.className="dbtn";db.textContent=delArm===i?"확인?":"삭제";db.onclick=e=>delItem(i,e.currentTarget);
     bar.append(eb,db);d.append(s,p);
-    if(it.m){const mm=document.createElement("div");mm.className="pa mine";mm.textContent="[내 답변]\n"+it.m;d.append(mm)}
+    
     d.append(bar);box.appendChild(d);
   });
   $("pvToggle").textContent="모두 펼치기";
@@ -263,7 +267,7 @@ function tick(){$("timer").textContent="⏱ "+fmt(elapsed())}
 function stopTimer(){if(tTimer){clearInterval(tTimer);tTimer=null}if(tStart!==null){tAcc+=(Date.now()-tStart)/1000;tStart=null}}
 function startTimer(){if(tStart!==null||!$("result").classList.contains("hide"))return;tStart=Date.now();tTimer=setInterval(tick,250)}
 const clean=w=>w.replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu,"");
-function renderClickable(box,it,cb){
+function renderClickableOld(box,it,cb){
   box.innerHTML="";const ks=new Set(kwList(it));
   it.a.split(/(\s+)/).forEach(tok=>{
     if(!tok)return;
@@ -274,6 +278,49 @@ function renderClickable(box,it,cb){
     box.appendChild(s);
   });
 }
+function renderClickable(box,it,cb){
+  box.innerHTML="";box.classList.add("clk");
+  const ks=kwList(it),words=[];
+  it.a.split(/(\s+)/).forEach(tok=>{
+    if(!tok)return;
+    if(/^\s+$/.test(tok)){box.appendChild(document.createTextNode(tok));return}
+    const s=document.createElement("span");s.className="tk";s.textContent=tok;box.appendChild(s);
+    words.push({w:clean(tok),s});
+  });
+  const cov=words.map(()=>[]);
+  ks.forEach((k,ki)=>{
+    const kw=k.split(/\s+/).map(clean).filter(Boolean);
+    if(!kw.length)return;
+    if(kw.length===1){words.forEach((x,i)=>{if(x.w&&x.w.includes(kw[0]))cov[i].push(ki)})}
+    else for(let i=0;i+kw.length<=words.length;i++){
+      if(kw.every((q,j)=>{const x=words[i+j].w;return x&&((j===0||j===kw.length-1)?x.includes(q):x===q)}))for(let j=0;j<kw.length;j++)cov[i+j].push(ki);
+    }
+  });
+  const redo=()=>{renderClickable(box,it,cb);if(cb)cb()};
+  words.forEach((x,i)=>{
+    if(cov[i].length)x.s.classList.add("sel");
+    if(x.w)x.s.onclick=()=>{
+      if(box._d)return;
+      const c=kwList(it);
+      if(cov[i].length){const rm=new Set(cov[i]);it.k=c.filter((_,j)=>!rm.has(j)).join(", ")}
+      else{c.push(x.w);it.k=c.join(", ")}
+      save();redo();
+    };
+  });
+  const apply=()=>{
+    const sel=window.getSelection();
+    if(!sel||sel.isCollapsed||!sel.rangeCount)return false;
+    if(!box.contains(sel.getRangeAt(0).commonAncestorContainer))return false;
+    const t=clean(sel.toString().replace(/[,，、]/g," ").replace(/\s+/g," ").trim());
+    sel.removeAllRanges();
+    if(t&&t.length<=60){const c=kwList(it),i=c.indexOf(t);if(i>=0)c.splice(i,1);else c.push(t);it.k=c.join(", ");save()}
+    return true;
+  };
+  box._apply=()=>{if(apply())redo()};
+  box.onmouseup=()=>{if(apply()){box._d=true;setTimeout(()=>{box._d=false;redo()},0)}};
+}
+let selT=null;
+document.addEventListener("selectionchange",()=>{clearTimeout(selT);selT=setTimeout(()=>{const s=window.getSelection();if(!s||s.isCollapsed||!s.anchorNode)return;const n=s.anchorNode.nodeType===1?s.anchorNode:s.anchorNode.parentElement,b=n&&n.closest&&n.closest(".clk");if(b&&b._apply)b._apply()},800)});
 function renderGhost(){
   const it=items[idx],T=[...it.a.replace(/\s*\n\s*/g," ").trim()],Y=[...$("ans").value];let h="";
   for(let i=0;i<T.length;i++){
@@ -493,6 +540,7 @@ $("ex2").onclick=()=>dl("면접_학습지_"+stamp()+".txt",sheetTxt());
 $("ex4").onclick=()=>dl("면접_학습지_"+stamp()+".html",sheetHTML(true));
 $("ex5").onclick=()=>dl("면접_빈학습지_"+stamp()+".html",sheetHTML(false));
 $("pvLoad").onclick=()=>{$("preview").classList.add("hide");$("loader").classList.remove("hide")};
+$("pvKw").onclick=()=>{const on=$("pvList").classList.toggle("kwonly");$("pvKw").textContent=on?"키워드 끄기":"키워드만 보기"};
 $("pvToggle").onclick=()=>{const ds=[...document.querySelectorAll("#pvList details")];const open=ds.some(d=>!d.open);ds.forEach(d=>d.open=open);$("pvToggle").textContent=open?"모두 접기":"모두 펼치기"};
 $("addBtn").onclick=()=>editItem(-1);
 $("esave").onclick=saveEdit;
